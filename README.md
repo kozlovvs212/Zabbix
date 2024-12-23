@@ -1,38 +1,55 @@
-# Установка и настройка Zabbix
+# Домашнее задание к занятию «Система мониторинга Zabbix»
 
-## Выполненные шаги
+## Выполнил: Виктор Козлов
 
+### Задание 1: Установка Zabbix Server с веб-интерфейсом
+
+### Задание 2: Установка Zabbix Agent на два хоста
+
+#### Скриншоты
+Все скриншоты, необходимые для выполнения задания, находятся по следующей ссылке:  
+[Скриншоты выполнения задания](https://docs.google.com/document/d/1ecspcvtEY4TzW7Z4QhdCJbowKdorpmB79WRz8LfXUlg/edit?usp=sharing)
+
+#### Использованные команды:
 ```bash
-# 1. Становимся root-пользователем
-sudo -s
+# Установка PostgreSQL
+sudo apt update
+sudo apt install postgresql
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
 
-# 2. Устанавливаем репозиторий Zabbix
-wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_latest_6.0+ubuntu24.04_all.deb
-dpkg -i zabbix-release_latest_6.0+ubuntu24.04_all.deb
-apt update
+# Добавление репозитория Zabbix
+wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-5%2Bubuntu22.04_all.deb
+sudo dpkg -i zabbix-release_6.0-5+ubuntu22.04_all.deb
+sudo apt update
 
-# 3. Устанавливаем Zabbix сервер, веб-интерфейс и агент
-apt install zabbix-server-pgsql zabbix-frontend-php php8.3-pgsql zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+# Установка Zabbix Server, веб-интерфейса и агента
+sudo apt install zabbix-server-pgsql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
 
-# 4. Создаем базу данных для Zabbix
+# Настройка базы данных PostgreSQL
 sudo -u postgres createuser --pwprompt zabbix
 sudo -u postgres createdb -O zabbix zabbix
-zcat /usr/share/zabbix-sql-scripts/postgresql/server.sql.gz | sudo -u postgres psql zabbix
+zcat /usr/share/doc/zabbix-sql-scripts/postgresql/create.sql.gz | sudo -u zabbix psql zabbix
 
-# 5. Настраиваем базу данных в конфигурационном файле Zabbix
-nano /etc/zabbix/zabbix_server.conf
-# (Изменяем параметр `DBPassword` на пароль пользователя Zabbix)
+# Настройка Zabbix Server
+sudo nano /etc/zabbix/zabbix_server.conf
+# (Измените параметр DBPassword=<ваш_пароль>)
 
-# 6. Запускаем процессы Zabbix сервера, агента и Apache
-systemctl restart zabbix-server zabbix-agent apache2
-systemctl enable zabbix-server zabbix-agent apache2
+# Перезапуск сервисов
+sudo systemctl restart zabbix-server zabbix-agent apache2
+sudo systemctl enable zabbix-server zabbix-agent apache2
 
-# 7. Проверяем статус сервисов
-systemctl status apache2
-systemctl status zabbix-server zabbix-agent
+# Установка Zabbix Agent на обе машины
+sudo apt update
+sudo apt install zabbix-agent
 
-# 8. Открываем веб-интерфейс Zabbix в браузере
-# Веб-интерфейс доступен по адресу: http://51.250.71.202/zabbix
+# Настройка Zabbix Agent
+sudo nano /etc/zabbix/zabbix_agentd.conf
+# (Измените параметры Server и ServerActive, добавив IP Zabbix Server)
 
-# 9. Ссылка на Google-документ с фотографиями
-# https://docs.google.com/document/d/1ecspcvtEY4TzW7Z4QhdCJbowKdorpmB79WRz8LfXUlg/edit?usp=sharing
+# Перезапуск Zabbix Agent
+sudo systemctl restart zabbix-agent
+sudo systemctl enable zabbix-agent
+
+# Проверка подключения
+zabbix_get -s <IP Zabbix Agent> -k agent.ping
